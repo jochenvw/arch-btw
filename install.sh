@@ -138,8 +138,10 @@ mkdir -p "$HOME/.config/btop/themes"
 ln -sf "$SCRIPT_DIR/config/btop/btop.conf"                  "$HOME/.config/btop/btop.conf"
 ln -sf "$SCRIPT_DIR/config/btop/themes/hackerman.theme"     "$HOME/.config/btop/themes/hackerman.theme"
 
-# lazyvim hackerman colorscheme
+# lazyvim config + hackerman colorscheme
 mkdir -p "$NVIM_DIR/lua/plugins"
+mkdir -p "$NVIM_DIR/lua/config"
+ln -sf "$SCRIPT_DIR/config/nvim/lua/config/lazy.lua"         "$NVIM_DIR/lua/config/lazy.lua"
 ln -sf "$SCRIPT_DIR/config/nvim/lua/plugins/colorscheme.lua" "$NVIM_DIR/lua/plugins/colorscheme.lua"
 ln -sf "$SCRIPT_DIR/config/nvim/lua/plugins/lang.lua"        "$NVIM_DIR/lua/plugins/lang.lua"
 ln -sf "$SCRIPT_DIR/config/nvim/lua/plugins/editor.lua"      "$NVIM_DIR/lua/plugins/editor.lua"
