@@ -19,11 +19,9 @@ fi
 $SUDO pacman -Sy --noconfirm git
 
 if [ -d "$DEST" ]; then
-  git -C "$DEST" fetch origin
-  git -C "$DEST" reset --hard origin/master
-else
-  git clone "$REPO" "$DEST"
+  rm -rf "$DEST"
 fi
+git clone "$REPO" "$DEST"
 
 chmod +x "$DEST/install.sh"
 exec "$DEST/install.sh"
