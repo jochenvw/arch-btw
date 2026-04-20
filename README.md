@@ -1,23 +1,22 @@
 # arch-btw
 
-Omarchy-inspired Arch Linux (WSL2) setup. One script, done. Hackerman theme. 🐧
+Omarchy-inspired dev machine setup. Fresh Windows 11 → fully loaded in two scripts. Hackerman theme. 🐧
 
-## Bootstrap (one-liner on vanilla Arch)
+## Step 1: Windows (PowerShell as Admin)
 
-No dependencies needed — `curl` ships with Arch base, and the bootstrap script installs `git` for you before cloning.
+```powershell
+irm https://raw.githubusercontent.com/jochenvw/arch-btw/master/windows-setup.ps1 | iex
+```
+
+Installs: Git, GitHub CLI, Copilot CLI, VS Code Insiders, Docker Desktop, Go, Python, Node.js, Azure CLI/azd/Functions, PowerShell 7, Brave, 7-Zip, FastStone Capture, Dev Tunnels, Foundry Local, Windows Terminal.
+
+## Step 2: Arch WSL2 (one-liner)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/jochenvw/arch-btw/master/bootstrap.sh | bash
 ```
 
-Or do it yourself:
-
-```bash
-sudo pacman -S git
-git clone https://github.com/jochenvw/arch-btw.git ~/arch-btw
-cd ~/arch-btw && ./install.sh
-exec zsh
-```
+No dependencies needed — bootstrap installs `git` for you.
 
 ## What you get
 
