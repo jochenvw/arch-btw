@@ -81,7 +81,7 @@ fi
 
 # --- AUR packages ---
 info "📦 Installing AUR packages"
-$AS_BUILD yay -S --needed --noconfirm lazygit lazydocker-bin tty-clock
+$AS_BUILD yay -S --needed --noconfirm lazygit lazydocker-bin tty-clock aichat
 ok "lazygit, lazydocker, tty-clock"
 
 # --- uv (python) ---

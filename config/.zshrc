@@ -37,7 +37,7 @@ alias gp='git push'
 alias gl='git log --oneline --graph -20'
 
 # --- quick edit ---
-alias zshrc='nvim ~/.zshrc && source ~/.zshrc'
+alias ask='aichat'
 
 # --- fastfetch on shell open ---
 fastfetch 2>/dev/null
