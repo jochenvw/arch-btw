@@ -55,7 +55,7 @@ ok "yay"
 
 # --- AUR packages ---
 info "Installing AUR packages"
-$AS_BUILD yay -S --needed --noconfirm lazygit lazydocker-bin copilot-cli-bin tty-clock
+$AS_BUILD yay -S --needed --noconfirm lazygit lazydocker-bin tty-clock
 
 # --- uv (python) ---
 if ! command -v uv &>/dev/null; then
@@ -63,6 +63,11 @@ if ! command -v uv &>/dev/null; then
   curl -LsSf https://astral.sh/uv/install.sh | sh
 fi
 ok "uv"
+
+# --- GitHub Copilot CLI ---
+info "Installing GitHub Copilot CLI"
+curl -fsSL https://gh.io/copilot-install | bash
+ok "copilot cli"
 
 # --- LazyVim ---
 NVIM_DIR="$HOME/.config/nvim"
