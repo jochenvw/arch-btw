@@ -46,6 +46,7 @@ $SUDO pacman -S --needed --noconfirm \
   neovim \
   fzf ripgrep fd bat eza zoxide \
   go python python-pip nodejs npm \
+  gopls delve python-debugpy ruff \
   docker docker-compose \
   github-cli btop fastfetch \
   man-db htop jq yq
@@ -140,6 +141,8 @@ ln -sf "$SCRIPT_DIR/config/btop/themes/hackerman.theme"     "$HOME/.config/btop/
 # lazyvim hackerman colorscheme
 mkdir -p "$NVIM_DIR/lua/plugins"
 ln -sf "$SCRIPT_DIR/config/nvim/lua/plugins/colorscheme.lua" "$NVIM_DIR/lua/plugins/colorscheme.lua"
+ln -sf "$SCRIPT_DIR/config/nvim/lua/plugins/lang.lua"        "$NVIM_DIR/lua/plugins/lang.lua"
+ln -sf "$SCRIPT_DIR/config/nvim/lua/plugins/editor.lua"      "$NVIM_DIR/lua/plugins/editor.lua"
 
 # lazygit hackerman theme
 mkdir -p "$HOME/.config/lazygit"
