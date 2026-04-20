@@ -61,15 +61,56 @@ foreach ($pkg in $packages) {
     }
 }
 
-# --- WSL2 + Arch ---
+# --- WSL2 ---
 Info "🐧 Ensuring WSL2 is enabled"
 $wslInstalled = wsl --list --quiet 2>&1
 if ($LASTEXITCODE -ne 0) {
     Info "Installing WSL2"
     wsl --install --no-distribution
-    Ok "WSL2 (reboot may be required)"
+    Ok "WSL2 installed (reboot may be required before continuing)"
+    Write-Host ""
+    Write-Host "  ⚠️  If this is the first WSL install, reboot and re-run this script." -ForegroundColor Yellow
+    Write-Host ""
 } else {
     Skip "WSL2"
+}
+
+# --- Arch Linux on WSL2 ---
+$archInstalled = wsl --list --quiet 2>&1 | Select-String -Pattern "Arch"
+if (-not $archInstalled) {
+    Info "🐧 Installing Arch Linux WSL2"
+    $archDir = "$env:USERPROFILE\ArchWSL"
+    $archZip = "$env:TEMP\Arch.zip"
+
+    if (-not (Test-Path "$archDir\Arch.exe")) {
+        # Download latest ArchWSL release
+        Info "Downloading ArchWSL"
+        $releases = Invoke-RestMethod "https://api.github.com/repos/yuk7/ArchWSL/releases/latest"
+        $asset = $releases.assets | Where-Object { $_.name -match "Arch\.zip$" } | Select-Object -First 1
+        Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $archZip
+        
+        # Extract and install
+        Info "Extracting to $archDir"
+        New-Item -ItemType Directory -Path $archDir -Force | Out-Null
+        Expand-Archive -Path $archZip -DestinationPath $archDir -Force
+        Remove-Item $archZip -Force
+    }
+
+    Info "Registering Arch distro"
+    Push-Location $archDir
+    & .\Arch.exe
+    Pop-Location
+    Ok "Arch Linux WSL2"
+} else {
+    Skip "Arch Linux WSL2"
+}
+
+# --- Set Arch as default WSL distro ---
+$distros = wsl --list --quiet 2>&1
+if ($distros -match "Arch") {
+    Info "Setting Arch as default WSL distro"
+    wsl --set-default Arch
+    Ok "Arch is default WSL distro"
 }
 
 # --- Done ---
@@ -79,11 +120,10 @@ Write-Host "  ║                                           ║" -ForegroundColo
 Write-Host "  ║   🎉  Windows side done!                  ║" -ForegroundColor Green
 Write-Host "  ║                                           ║" -ForegroundColor Green
 Write-Host "  ║   Next steps:                             ║" -ForegroundColor Green
-Write-Host "  ║   1. Install Arch Linux from MS Store     ║" -ForegroundColor Green
-Write-Host "  ║      or: github.com/yuk7/ArchWSL          ║" -ForegroundColor Green
-Write-Host "  ║   2. Docker Desktop → Settings →           ║" -ForegroundColor Green
+Write-Host "  ║   1. Docker Desktop → Settings →           ║" -ForegroundColor Green
 Write-Host "  ║      WSL Integration → enable Arch        ║" -ForegroundColor Green
-Write-Host "  ║   3. In Arch WSL, run:                    ║" -ForegroundColor Green
+Write-Host "  ║   2. Open Windows Terminal → Arch, run:   ║" -ForegroundColor Green
+Write-Host "  ║                                           ║" -ForegroundColor Green
 Write-Host "  ║      curl -fsSL https://raw.github        ║" -ForegroundColor Green
 Write-Host "  ║      usercontent.com/jochenvw/arch-btw    ║" -ForegroundColor Green
 Write-Host "  ║      /master/bootstrap.sh | bash          ║" -ForegroundColor Green
