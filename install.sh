@@ -45,7 +45,7 @@ $SUDO pacman -S --needed --noconfirm \
   zsh starship tmux zellij \
   neovim \
   fzf ripgrep fd bat eza zoxide \
-  go python python-pip nodejs npm \
+  go python python-pip nodejs npm rust \
   gopls delve python-debugpy ruff \
   docker docker-compose \
   github-cli btop fastfetch \
@@ -81,8 +81,17 @@ fi
 
 # --- AUR packages ---
 info "📦 Installing AUR packages"
-$AS_BUILD yay -S --needed --noconfirm lazygit lazydocker-bin porsmo aichat
-ok "lazygit, lazydocker, porsmo, aichat"
+$AS_BUILD yay -S --needed --noconfirm lazygit lazydocker-bin aichat
+ok "lazygit, lazydocker, aichat"
+
+# --- timr-tui (pomodoro clock) ---
+if ! command -v timr-tui &>/dev/null; then
+  info "⏱️  Installing timr-tui"
+  cargo install timr-tui
+  ok "timr-tui"
+else
+  skip "timr-tui"
+fi
 
 # --- uv (python) ---
 if ! command -v uv &>/dev/null; then

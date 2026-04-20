@@ -18,7 +18,7 @@ curl -fsSL https://raw.githubusercontent.com/jochenvw/arch-btw/master/bootstrap.
 
 **Windows**: Git, GitHub CLI, Copilot CLI, VS Code Insiders, Docker Desktop, Go, Python, Node.js, Azure CLI/azd/Functions, Dev Tunnels, Foundry Local, PowerShell 7, Brave, 7-Zip, FastStone Capture, WSL2 + Arch.
 
-**Arch WSL2**: zsh, starship, zoxide, fzf, lazygit (`lg`), lazydocker (`ld`), neovim+LazyVim (`v`), tmux, zellij, btop, porsmo (`clock` — pomodoro + timer), aichat (`ask`), Go, Python+uv, Node+npm, ripgrep, fd, bat, eza, fastfetch, GitHub Copilot CLI. All hackerman themed.
+**Arch WSL2**: zsh, starship, zoxide, fzf, lazygit (`lg`), lazydocker (`ld`), neovim+LazyVim (`v`), tmux, zellij, btop, timr-tui (`clock` — pomodoro + timer), aichat (`ask`), Go, Python+uv, Node+npm, ripgrep, fd, bat, eza, fastfetch, GitHub Copilot CLI. All hackerman themed.
 
 ## Post-install
 
