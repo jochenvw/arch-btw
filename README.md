@@ -1,14 +1,16 @@
-# arch_for_me
+# arch-btw
 
-Omarchy-inspired Arch Linux (WSL2) setup. One script, done.
+Omarchy-inspired Arch Linux (WSL2) setup. One script, done. Hackerman theme. 🐧
 
 ## Bootstrap (one-liner on vanilla Arch)
+
+No dependencies needed — `curl` ships with Arch base, and the bootstrap script installs `git` for you before cloning.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/jochenvw/arch-btw/master/bootstrap.sh | bash
 ```
 
-Or manually:
+Or do it yourself:
 
 ```bash
 sudo pacman -S git
