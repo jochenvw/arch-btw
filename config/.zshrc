@@ -1,5 +1,5 @@
 # --- path ---
-export PATH="$HOME/.local/bin:$HOME/go/bin:$PATH"
+export PATH="$HOME/.local/bin:$HOME/go/bin:$HOME/.cargo/bin:$PATH"
 
 # --- history ---
 HISTSIZE=10000
