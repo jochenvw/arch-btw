@@ -1,5 +1,5 @@
 // zellij config - clean & minimal
-keybinds clear-defaults=true {
+keybinds clear-defaults=false {
     shared {
         bind "Alt h" { MoveFocusOrTab "Left"; }
         bind "Alt l" { MoveFocusOrTab "Right"; }
@@ -44,7 +44,7 @@ themes {
 }
 theme "hackerman"
 
-default_layout "compact"
+default_layout "default"
 pane_frames false
 mouse_mode true
 copy_on_select true
