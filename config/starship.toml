@@ -1,0 +1,34 @@
+# hackerman theme — green on dark, matrix vibes
+add_newline = true
+command_timeout = 200
+format = "[$directory$git_branch$git_status]($style)$character"
+
+[character]
+success_symbol = "[❯](bold #50f872)"
+error_symbol = "[✗](bold #7cf8f7)"
+
+[directory]
+truncation_length = 2
+truncation_symbol = "…/"
+style = "#50f872"
+repo_root_style = "bold #50f872"
+repo_root_format = "[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) "
+
+[git_branch]
+format = "[$branch]($style) "
+style = "italic #7cf8f7"
+
+[git_status]
+format     = '[$all_status]($style)'
+style      = "#50f7d4"
+ahead      = "⇡${count} "
+diverged   = "⇕⇡${ahead_count}⇣${behind_count} "
+behind     = "⇣${count} "
+conflicted = " "
+up_to_date = " "
+untracked  = "? "
+modified   = " "
+stashed    = ""
+staged     = ""
+renamed    = ""
+deleted    = ""

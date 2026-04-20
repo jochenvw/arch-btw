@@ -1,0 +1,50 @@
+// zellij config - clean & minimal
+keybinds clear-defaults=true {
+    shared {
+        bind "Alt h" { MoveFocusOrTab "Left"; }
+        bind "Alt l" { MoveFocusOrTab "Right"; }
+        bind "Alt j" { MoveFocus "Down"; }
+        bind "Alt k" { MoveFocus "Up"; }
+        bind "Alt n" { NewPane; }
+        bind "Alt t" { NewTab; }
+        bind "Alt 1" { GoToTab 1; }
+        bind "Alt 2" { GoToTab 2; }
+        bind "Alt 3" { GoToTab 3; }
+        bind "Alt 4" { GoToTab 4; }
+        bind "Alt 5" { GoToTab 5; }
+        bind "Alt q" { Quit; }
+        bind "Alt d" { Detach; }
+        bind "Alt f" { ToggleFloatingPanes; }
+        bind "Alt =" { Resize "Increase"; }
+        bind "Alt -" { Resize "Decrease"; }
+    }
+    shared_except "locked" {
+        bind "Ctrl g" { SwitchToMode "locked"; }
+    }
+    locked {
+        bind "Ctrl g" { SwitchToMode "normal"; }
+    }
+}
+
+// hackerman palette
+themes {
+    hackerman {
+        fg "#ddf7ff"
+        bg "#0B0C16"
+        black "#0B0C16"
+        red "#50f872"
+        green "#4fe88f"
+        yellow "#50f7d4"
+        blue "#829dd4"
+        magenta "#86a7df"
+        cyan "#7cf8f7"
+        white "#ddf7ff"
+        orange "#82FB9C"
+    }
+}
+theme "hackerman"
+
+default_layout "compact"
+pane_frames false
+mouse_mode true
+copy_on_select true
