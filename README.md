@@ -37,6 +37,14 @@ exec zsh
 | go, python+uv, node+npm | languages | — |
 | ripgrep, fd, bat, eza | better cli tools | — |
 
+## Docker (WSL2)
+
+If you use Docker Desktop on Windows, enable your Arch distro:
+
+**Docker Desktop → Settings → Resources → WSL Integration** → toggle on your Arch distro → Apply & Restart.
+
+Then `docker` and `lazydocker` just work — no daemon needed inside WSL.
+
 ## Update everything
 
 ```bash
