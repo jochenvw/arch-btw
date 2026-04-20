@@ -25,7 +25,7 @@ $SUDO pacman -S --needed --noconfirm \
   fzf ripgrep fd bat eza zoxide \
   go python python-pip nodejs npm \
   docker docker-compose \
-  github-cli btop tty-clock \
+  github-cli btop \
   man-db htop jq yq
 
 # --- yay (AUR helper) ---
@@ -40,7 +40,7 @@ ok "yay"
 
 # --- AUR packages ---
 info "Installing AUR packages"
-yay -S --needed --noconfirm lazygit lazydocker-bin copilot-cli-bin
+yay -S --needed --noconfirm lazygit lazydocker-bin copilot-cli-bin tty-clock
 
 # --- uv (python) ---
 if ! command -v uv &>/dev/null; then
