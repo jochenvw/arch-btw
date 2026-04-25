@@ -7,19 +7,6 @@ set -euo pipefail
 REPO="https://github.com/jochenvw/arch-btw.git"
 DEST="$HOME/arch-btw"
 
-detect_profile() {
-  if command -v omarchy >/dev/null 2>&1; then
-    DETECTED_ENV="omarchy (omarchy command found)"
-    printf 'home'
-  elif pacman -Q omarchy-keyring >/dev/null 2>&1; then
-    DETECTED_ENV="omarchy (omarchy-keyring package found)"
-    printf 'home'
-  else
-    DETECTED_ENV="vanilla arch (no omarchy markers found)"
-    printf 'work'
-  fi
-}
-
 DETECTED_ENV="unknown"
 if command -v omarchy >/dev/null 2>&1; then
   DETECTED_ENV="omarchy (omarchy command found)"

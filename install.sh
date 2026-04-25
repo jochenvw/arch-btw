@@ -235,10 +235,6 @@ if [ "$PROFILE" = "work" ]; then
   mkdir -p "$HOME/.config/zellij"
   ln -sf "$SCRIPT_DIR/config/zellij.kdl" "$HOME/.config/zellij/config.kdl"
 
-  mkdir -p "$HOME/.config/btop/themes"
-  ln -sf "$SCRIPT_DIR/config/btop/btop.conf" "$HOME/.config/btop/btop.conf"
-  ln -sf "$SCRIPT_DIR/config/btop/themes/hackerman.theme" "$HOME/.config/btop/themes/hackerman.theme"
-
   mkdir -p "$NVIM_DIR/lua/plugins"
   mkdir -p "$NVIM_DIR/lua/config"
   ln -sf "$SCRIPT_DIR/config/nvim/lua/config/lazy.lua" "$NVIM_DIR/lua/config/lazy.lua"
