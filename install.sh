@@ -3,41 +3,130 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+DETECTED_ENV="unknown"
+if command -v omarchy >/dev/null 2>&1; then
+  DETECTED_ENV="omarchy (omarchy command found)"
+  DETECTED_PROFILE="home"
+elif pacman -Q omarchy-keyring >/dev/null 2>&1; then
+  DETECTED_ENV="omarchy (omarchy-keyring package found)"
+  DETECTED_PROFILE="home"
+else
+  DETECTED_ENV="vanilla arch (no omarchy markers found)"
+  DETECTED_PROFILE="work"
+fi
+
+if [ -n "${1:-}" ]; then
+  PROFILE="$1"
+  PROFILE_SOURCE="cli argument"
+elif [ -n "${ARCH_BTW_PROFILE:-}" ]; then
+  PROFILE="$ARCH_BTW_PROFILE"
+  PROFILE_SOURCE="ARCH_BTW_PROFILE env var"
+else
+  PROFILE="$DETECTED_PROFILE"
+  PROFILE_SOURCE="auto-detected from environment"
+fi
+
+case "$PROFILE" in
+  work|home) ;;
+  *)
+    printf '\033[1;31m  ❌ Invalid profile "%s". Use "work" or "home".\033[0m\n' "$PROFILE"
+    exit 1
+    ;;
+esac
+
 # --- helpers ---
 info()  { printf '\033[1;34m  → %s\033[0m\n' "$*"; }
 ok()    { printf '\033[1;32m  ✅ %s\033[0m\n' "$*"; }
 skip()  { printf '\033[1;33m  ⏭️  %s (already installed)\033[0m\n' "$*"; }
-fail()  { printf '\033[1;31m  ❌ %s\033[0m\n' "$*"; exit 1; }
+step()  { printf '\033[1;36m  ⚙️  %s\033[0m\n' "$*"; }
+
+yay_install() {
+  # Avoid interactive clean/diff menus in CI, ssh, or agent runs
+  $AS_BUILD yay -S --needed --noconfirm --answerclean None --answerdiff None "$@"
+}
+
+install_aur_any() {
+  local label="$1"
+  shift
+  local pkg
+  for pkg in "$@"; do
+    if yay_install "$pkg" && pacman -Q "$pkg" >/dev/null 2>&1; then
+      ok "$label ($pkg)"
+      return 0
+    fi
+  done
+  printf '\033[1;31m  ❌ Failed to install %s (tried: %s)\033[0m\n' "$label" "$*"
+  return 1
+}
+
+install_pkg_any() {
+  local label="$1"
+  shift
+  local pkg
+  for pkg in "$@"; do
+    if pacman -Q "$pkg" >/dev/null 2>&1; then
+      skip "$label ($pkg)"
+      return 0
+    fi
+  done
+  for pkg in "$@"; do
+    if $SUDO pacman -S --needed --noconfirm "$pkg" >/dev/null 2>&1 && pacman -Q "$pkg" >/dev/null 2>&1; then
+      ok "$label ($pkg)"
+      return 0
+    fi
+  done
+  install_aur_any "$label" "$@"
+}
+
+install_pkg_any_optional() {
+  local label="$1"
+  shift
+  if install_pkg_any "$label" "$@"; then
+    return 0
+  fi
+  printf '\033[1;33m  ⚠️  %s not installed (optional). Install manually if you need it.\033[0m\n' "$label"
+  return 0
+}
+
+install_aur_with_retry() {
+  local pkg="$1"
+  local attempts=0
+  until [ "$attempts" -ge 3 ]; do
+    if yay_install "$pkg"; then
+      return 0
+    fi
+    attempts=$((attempts + 1))
+    step "Retrying $pkg from AUR ($attempts/3)"
+    sleep 2
+  done
+  return 1
+}
 
 printf '\033[1;32m
     ╔═══════════════════════════════════════════╗
     ║                                           ║
-    ║   🐧  a r c h - b t w                    ║
+    ║   arch-btw                                ║
     ║                                           ║
-    ║   ░█▀█░█▀▄░█▀▀░█░█░░░█▀▄░▀█▀░█░█░       ║
-    ║   ░█▀█░█▀▄░█░░░█▀█░░░█▀▄░░█░░█▄█░       ║
-    ║   ░▀░▀░▀░▀░▀▀▀░▀░▀░░░▀▀░░░▀░░▀░▀░       ║
+    ║   ░█▀█░█▀▄░█▀▀░█░█░░░█▀▄░▀█▀░█░█░         ║
+    ║   ░█▀█░█▀▄░█░░░█▀█░░░█▀▄░░█░░█▄█░         ║
+    ║   ░▀░▀░▀░▀░▀▀▀░▀░▀░░░▀▀░░░▀░░▀░▀░         ║
     ║                                           ║
-    ║   hackerman edition 💀                    ║
+    ║   hackerman edition                       ║
     ║                                           ║
     ╚═══════════════════════════════════════════╝
 \033[0m\n'
 
-# use sudo if available, skip if already root
+info "Using profile: $PROFILE"
+step "Environment: $DETECTED_ENV"
+step "Detected default profile: $DETECTED_PROFILE"
+step "Profile source: $PROFILE_SOURCE"
+
 if [ "$(id -u)" -eq 0 ]; then
   SUDO=""
 else
   SUDO="sudo"
 fi
 
-# --- remove AWS copilot if installed ---
-if command -v copilot &>/dev/null; then
-  info "🗑️  Removing AWS Copilot (wrong one!)"
-  $SUDO rm -f "$(which copilot)"
-  ok "AWS Copilot removed"
-fi
-
-# --- pacman core packages ---
 info "📦 Updating system & installing packages"
 $SUDO pacman -Syu --noconfirm
 $SUDO pacman -S --needed --noconfirm \
@@ -48,12 +137,13 @@ $SUDO pacman -S --needed --noconfirm \
   go python python-pip nodejs npm \
   gopls delve python-debugpy ruff \
   docker docker-compose \
-  github-cli btop fastfetch \
+  github-cli git-lfs \
+  btop fastfetch tree-sitter-cli luarocks \
   man-db htop jq yq
 ok "pacman packages"
 
-# --- build user for AUR (makepkg refuses root) ---
 BUILD_USER="builder"
+AS_BUILD=""
 if [ "$(id -u)" -eq 0 ]; then
   if ! id "$BUILD_USER" &>/dev/null; then
     info "👷 Creating AUR build user"
@@ -65,7 +155,6 @@ else
   AS_BUILD=""
 fi
 
-# --- yay (AUR helper) ---
 if ! command -v yay &>/dev/null; then
   info "📦 Installing yay"
   tmp=$(mktemp -d)
@@ -79,12 +168,35 @@ else
   skip "yay"
 fi
 
-# --- AUR packages ---
-info "📦 Installing AUR packages"
-$AS_BUILD yay -S --needed --noconfirm lazygit lazydocker-bin aichat timr
-ok "lazygit, lazydocker, aichat, timr-tui"
+if command -v git-credential-manager >/dev/null 2>&1; then
+  skip "git credential manager"
+elif $SUDO pacman -S --needed --noconfirm git-credential-manager && command -v git-credential-manager >/dev/null 2>&1; then
+  ok "git credential manager (pacman)"
+elif install_aur_with_retry git-credential-manager && command -v git-credential-manager >/dev/null 2>&1; then
+  ok "git credential manager (AUR)"
+else
+  printf '\033[1;31m  ❌ Failed to install git credential manager\033[0m\n'
+  exit 1
+fi
 
-# --- uv (python) ---
+info "📦 Installing common extra tools"
+install_pkg_any "Lazygit" lazygit
+install_pkg_any "Lazydocker" lazydocker lazydocker-bin
+install_pkg_any "Aichat" aichat
+install_pkg_any "Timr" timr clock-tui
+
+if [ "$PROFILE" = "work" ]; then
+  info "📦 Installing work profile packages"
+  install_pkg_any "Azure CLI" azure-cli
+  install_pkg_any "Azure Dev CLI" azd-bin azd
+fi
+
+if [ "$PROFILE" = "home" ]; then
+  info "📦 Installing home profile packages"
+  install_pkg_any_optional "Google Cloud CLI" google-cloud-cli google-cloud-cli-bin
+  install_pkg_any "Cursor CLI" cursor-bin cursor
+fi
+
 if ! command -v uv &>/dev/null; then
   info "🐍 Installing uv"
   curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -93,85 +205,90 @@ else
   skip "uv"
 fi
 
-# --- GitHub Copilot CLI ---
-if ! command -v gh-copilot &>/dev/null && ! gh copilot --version &>/dev/null 2>&1; then
-  info "🤖 Installing GitHub Copilot CLI"
-  curl -fsSL https://gh.io/copilot-install | bash
-  ok "copilot cli"
-else
-  skip "copilot cli"
+if [ "$PROFILE" = "work" ]; then
+  if ! command -v gh-copilot &>/dev/null && ! gh copilot --version &>/dev/null 2>&1; then
+    info "🤖 Installing GitHub Copilot CLI"
+    curl -fsSL https://gh.io/copilot-install | bash
+    ok "copilot cli"
+  else
+    skip "copilot cli"
+  fi
 fi
 
-# --- LazyVim ---
 NVIM_DIR="$HOME/.config/nvim"
-if [ ! -d "$NVIM_DIR/lua" ]; then
-  info "📝 Setting up LazyVim"
-  rm -rf "$NVIM_DIR"
-  git clone https://github.com/LazyVim/starter "$NVIM_DIR"
-  rm -rf "$NVIM_DIR/.git"
-  ok "lazyvim"
+if [ "$PROFILE" = "work" ]; then
+  if [ ! -d "$NVIM_DIR/lua" ]; then
+    info "📝 Setting up LazyVim"
+    rm -rf "$NVIM_DIR"
+    git clone https://github.com/LazyVim/starter "$NVIM_DIR"
+    rm -rf "$NVIM_DIR/.git"
+    ok "lazyvim"
+  else
+    skip "lazyvim"
+  fi
 else
-  skip "lazyvim"
+  step "Skipping LazyVim bootstrap on home profile"
 fi
 
-# --- zsh as default shell ---
-if [ "$SHELL" != "$(which zsh)" ]; then
+if [ -t 0 ] && [ "$SHELL" != "$(which zsh)" ]; then
   info "🐚 Setting zsh as default shell"
   chsh -s "$(which zsh)"
   ok "zsh default"
-else
+elif [ "$SHELL" = "$(which zsh)" ]; then
   skip "zsh default"
+else
+  step "Skipping default shell change (non-interactive run)"
 fi
 
-# --- symlink configs ---
-info "🔗 Linking config files"
-mkdir -p "$HOME/.config"
+if [ "$PROFILE" = "work" ]; then
+  info "🔗 Linking config files (work profile)"
+  mkdir -p "$HOME/.config"
 
-ln -sf "$SCRIPT_DIR/config/.zshrc"        "$HOME/.zshrc"
-ln -sf "$SCRIPT_DIR/config/starship.toml"  "$HOME/.config/starship.toml"
-ln -sf "$SCRIPT_DIR/config/.tmux.conf"     "$HOME/.tmux.conf"
-mkdir -p "$HOME/.config/zellij"
-ln -sf "$SCRIPT_DIR/config/zellij.kdl"    "$HOME/.config/zellij/config.kdl"
+  ln -sf "$SCRIPT_DIR/config/.zshrc" "$HOME/.zshrc"
+  ln -sf "$SCRIPT_DIR/config/starship.toml" "$HOME/.config/starship.toml"
+  ln -sf "$SCRIPT_DIR/config/.tmux.conf" "$HOME/.tmux.conf"
+  mkdir -p "$HOME/.config/zellij"
+  ln -sf "$SCRIPT_DIR/config/zellij.kdl" "$HOME/.config/zellij/config.kdl"
 
-# btop hackerman theme
-mkdir -p "$HOME/.config/btop/themes"
-ln -sf "$SCRIPT_DIR/config/btop/btop.conf"                  "$HOME/.config/btop/btop.conf"
-ln -sf "$SCRIPT_DIR/config/btop/themes/hackerman.theme"     "$HOME/.config/btop/themes/hackerman.theme"
+  mkdir -p "$NVIM_DIR/lua/plugins"
+  mkdir -p "$NVIM_DIR/lua/config"
+  ln -sf "$SCRIPT_DIR/config/nvim/lua/config/lazy.lua" "$NVIM_DIR/lua/config/lazy.lua"
+  ln -sf "$SCRIPT_DIR/config/nvim/lua/plugins/colorscheme.lua" "$NVIM_DIR/lua/plugins/colorscheme.lua"
+  ln -sf "$SCRIPT_DIR/config/nvim/lua/plugins/lang.lua" "$NVIM_DIR/lua/plugins/lang.lua"
+  ln -sf "$SCRIPT_DIR/config/nvim/lua/plugins/editor.lua" "$NVIM_DIR/lua/plugins/editor.lua"
 
-# lazyvim config + hackerman colorscheme
-mkdir -p "$NVIM_DIR/lua/plugins"
-mkdir -p "$NVIM_DIR/lua/config"
-ln -sf "$SCRIPT_DIR/config/nvim/lua/config/lazy.lua"         "$NVIM_DIR/lua/config/lazy.lua"
-ln -sf "$SCRIPT_DIR/config/nvim/lua/plugins/colorscheme.lua" "$NVIM_DIR/lua/plugins/colorscheme.lua"
-ln -sf "$SCRIPT_DIR/config/nvim/lua/plugins/lang.lua"        "$NVIM_DIR/lua/plugins/lang.lua"
-ln -sf "$SCRIPT_DIR/config/nvim/lua/plugins/editor.lua"      "$NVIM_DIR/lua/plugins/editor.lua"
+  mkdir -p "$HOME/.config/lazygit"
+  ln -sf "$SCRIPT_DIR/config/lazygit/config.yml" "$HOME/.config/lazygit/config.yml"
 
-# lazygit hackerman theme
-mkdir -p "$HOME/.config/lazygit"
-ln -sf "$SCRIPT_DIR/config/lazygit/config.yml"    "$HOME/.config/lazygit/config.yml"
+  mkdir -p "$HOME/.config/lazydocker"
+  ln -sf "$SCRIPT_DIR/config/lazydocker/config.yml" "$HOME/.config/lazydocker/config.yml"
 
-# lazydocker hackerman theme
-mkdir -p "$HOME/.config/lazydocker"
-ln -sf "$SCRIPT_DIR/config/lazydocker/config.yml"  "$HOME/.config/lazydocker/config.yml"
+  mkdir -p "$HOME/.config/fastfetch"
+  ln -sf "$SCRIPT_DIR/config/fastfetch.jsonc" "$HOME/.config/fastfetch/config.jsonc"
 
-# fastfetch config
-mkdir -p "$HOME/.config/fastfetch"
-ln -sf "$SCRIPT_DIR/config/fastfetch.jsonc"  "$HOME/.config/fastfetch/config.jsonc"
+  ok "configs linked (work)"
+else
+  step "Skipping terminal/theme dotfile linking on home profile"
+  mkdir -p "$NVIM_DIR/lua/plugins"
+  HOME_LANG_PLUGIN_FILE="$NVIM_DIR/lua/plugins/arch_btw_lang.lua"
+  if [ ! -e "$HOME_LANG_PLUGIN_FILE" ]; then
+    ln -sf "$SCRIPT_DIR/config/nvim/lua/plugins/lang.lua" "$HOME_LANG_PLUGIN_FILE"
+    ok "nvim language plugin hook linked (home)"
+  else
+    skip "nvim language plugin hook (home)"
+  fi
+fi
 
-ok "configs linked"
-
-# --- gh cli auth reminder ---
 if ! gh auth status &>/dev/null 2>&1; then
   printf '\n\033[1;33m  ⚠️  Run "gh auth login" to authenticate GitHub CLI\033[0m\n'
 fi
 
-# --- done ---
 printf '\033[1;32m
     ╔═══════════════════════════════════════════╗
     ║                                           ║
-    ║   🎉  All done! You use Arch btw.        ║
+    ║   Done. Profile: %-4s                     ║
     ║                                           ║
-    ║   Restart your shell:  exec zsh           ║
+    ║   Restart your shell:  exec zsh          ║
     ║                                           ║
     ╚═══════════════════════════════════════════╝
-\033[0m\n'
+\033[0m\n' "$PROFILE"

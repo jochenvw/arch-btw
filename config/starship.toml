@@ -1,34 +1,32 @@
-# hackerman theme — green on dark, matrix vibes
-add_newline = true
+add_newline = false
 command_timeout = 200
-format = "[$directory$git_branch$git_status]($style)$character"
+palette = "hackerman"
+format = "$directory$git_branch${custom.git_tag}$character"
 
-[character]
-success_symbol = "[❯](bold #50f872)"
-error_symbol = "[✗](bold #7cf8f7)"
+[palettes.hackerman]
+text_dark = "#0B0C16"
+path_bg = "#82FB9C"
+branch_bg = "#7cf8f7"
+tag_bg = "#86a7df"
+prompt_fg = "#50f872"
 
 [directory]
 truncation_length = 2
 truncation_symbol = "…/"
-style = "#50f872"
-repo_root_style = "bold #50f872"
-repo_root_format = "[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) "
+style = "fg:text_dark bg:path_bg bold"
+read_only_style = "fg:text_dark bg:path_bg bold"
+format = "[ $path ]($style)[$read_only]($read_only_style)[](fg:path_bg bg:branch_bg)"
 
 [git_branch]
-format = "[$branch]($style) "
-style = "italic #7cf8f7"
+format = "[  $branch ]($style)[](fg:branch_bg bg:tag_bg)"
+style = "fg:text_dark bg:branch_bg bold"
 
-[git_status]
-format     = '[$all_status]($style)'
-style      = "#50f7d4"
-ahead      = "⇡${count} "
-diverged   = "⇕⇡${ahead_count}⇣${behind_count} "
-behind     = "⇣${count} "
-conflicted = " "
-up_to_date = " "
-untracked  = "? "
-modified   = " "
-stashed    = ""
-staged     = ""
-renamed    = ""
-deleted    = ""
+[custom.git_tag]
+command = "git describe --tags --abbrev=0 2>/dev/null"
+when = "git describe --tags --abbrev=0 >/dev/null 2>&1"
+format = "[  $output ]($style)[](fg:tag_bg)"
+style = "fg:text_dark bg:tag_bg bold"
+
+[character]
+success_symbol = "[ ❯ ](fg:prompt_fg bold)"
+error_symbol = "[ ❯ ](fg:branch_bg bold)"
